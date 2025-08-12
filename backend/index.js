@@ -5,7 +5,7 @@ import express from 'express'
 import cors from 'cors'
 
 // Importamos los archivos que tienen las rutas de cada tabla
-import customerRoutes from './routes/customes.js'
+import customerRoutes from './routes/customer.js'
 import invoicesRoutes from './routes/invoices.js'
 import paymentRoutes from './routes/payment_platforms.js'
 import transationRoutes from './routes/transaction.js'
@@ -28,9 +28,10 @@ app.use('/api/invoices', invoicesRoutes)
 app.use('/api/payment', paymentRoutes)
 app.use('/api/transation', transationRoutes)
 app.use('/api/status',statusRouter)
-
-
-app.use('postman')
+app.use('/postman/total-paid-by-customer',postmanRouter)
+app.use('/postman/pending-invoices',postmanRouter)
+app.use('/postman/transactions-by-platform/:platform',postmanRouter)
+app.use('/postman/platforms',postmanRouter)
 
 // Encendemos el servidor en el puerto 3000. Cuando esté listo, muestra un mensaje en la consola.
 app.listen(3000, () => {

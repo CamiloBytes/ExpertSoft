@@ -139,7 +139,7 @@ router.get('/', async (req, res) => {
         transaction.id_transaction AS id_de_la_transaccion,
         customer.nombre AS Nombre_del_cliente,
         customer.identificacion AS documento_de_identidad,
-        customer.correo AS email_del_cliente,
+        customer.correo AS email_del_clien,
         customer.telefono AS telefono_contacto,
         invoice.titulo AS titulo_del_invoice,
         invoice.isbn AS codigo_isbn,

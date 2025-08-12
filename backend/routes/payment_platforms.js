@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
         for (const payment of payments) {
             //  Verificamos si ya exists un payment con ese nombre
             const [exists] = await db.promise().query(
-                'SELECT * FROM payment_platforms WHERE nombre_payment = ?',
+                'SELECT * FROM payment_platforms WHERE name_payment = ?',
                 [payment]
             )
 

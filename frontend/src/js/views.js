@@ -33,27 +33,27 @@ export function home() {
 
     // Variable para guardar el archivo seleccionado por el usuario
     let archivoSeleccionado = null;
-    
-    const from =document.getElementById('fromExcel')
-    
-    from.addEventListener('submit',(e)=>{
-      e.preventDefault()
-    
-      const inputArchivo = document.getElementById('excelInput');
-      archivoSeleccionado = inputArchivo.files[0]
-      
-      if(!archivoSeleccionado){
-        alert('Por favor selecciona un archivo Excel antes de enviarlo.')
-        return
-      }
-      // llamo a la funcion leerExcel para procesar el archivo 
-      leerExcel(archivoSeleccionado)
+
+    const from = document.getElementById('fromExcel')
+
+    from.addEventListener('submit', (e) => {
+        e.preventDefault()
+
+        const inputArchivo = document.getElementById('excelInput');
+        archivoSeleccionado = inputArchivo.files[0]
+
+        if (!archivoSeleccionado) {
+            alert('Por favor selecciona un archivo Excel antes de enviarlo.')
+            return
+        }
+        // llamo a la funcion leerExcel para procesar el archivo 
+        leerExcel(archivoSeleccionado)
     })
 
     // Selecciono los botones del menú
-    const btnInicio = document.getElementById('btn-inicio');
-    const btnPrestamos = document.getElementById('btn-prestamos');
-    const btnUsuarios = document.getElementById('btn-usuarios');
+    const btnInicio = document.getElementById('btn-home');
+    const btnPrestamos = document.getElementById('btn-invoices');
+    const btnUsuarios = document.getElementById('btn-customer');
     // escucho los eventos para cambiar de vista
     btnInicio.addEventListener('click', (e) => {
         e.preventDefault();
@@ -114,7 +114,7 @@ export function renderUsersPage(e) {
     const btnRecargar = app.querySelector('#btn-recargar')
     const btnInicio = app.querySelector('#btn-inicio');
     const btnPrestamos = app.querySelector('#btn-prestamos');
-    
+
     btnInicio.addEventListener('click', (e) => {
         e.preventDefault();
         history.pushState({}, '', '/');
@@ -308,7 +308,7 @@ export function renderPrestamos(e) {
             });
 
             // Botones Eliminar
-           document.querySelectorAll('.btn-eliminar').forEach(boton => {
+            document.querySelectorAll('.btn-eliminar').forEach(boton => {
                 boton.addEventListener('click', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();

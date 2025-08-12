@@ -23,16 +23,16 @@ export function leerExcel(archive) {
         const dataJSON = XLSX.utils.sheet_to_json(leaf, { defval: "" });
 
         // Declaramos arreglos para separar los data por tabla
-        const customer = [];
+        const customers = [];
         const invoices = [];
         const payment_platforms = new Set(); // Usamos Set para evitar payment_platforms duplicados
         const transaction_status = new Set();
-        const transaction = [];
+        const transactions = [];
 
         // Recorremos cada row del Excel
         dataJSON.forEach(row => {
             // agrego los customer al arreiglo customer
-            customer.push({
+            customers.push({
                 name_customer: row["Nombre del Cliente"],
                 identification_customer : row["Número de Identificación"],
                 direction: row["Dirección"],
@@ -53,7 +53,7 @@ export function leerExcel(archive) {
             transaction_status.add(row["Estado de la Transacción"])
 
             // agrego los data al arreiglo de los transaction
-            transaction.push({
+            transactions.push({
                 date_time:row["Fecha y Hora de la Transacción"],
                 transaction_amount:row["Monto de la Transacción"],
                 trasaction_type:row["Tipo de Transacción"],
@@ -67,14 +67,14 @@ export function leerExcel(archive) {
         try {
             // Enviamos los data a los endpoints del backend
             // endpoint de customer
-            await enviardata('/api/customer', customer);
+            await enviardata('/api/customer', customers);
             // endpoint de invoices
             await enviardata('/api/invoices', invoices);
             // endpoint de payment_platforms, convertimos el Set a un Array
-            await enviardata('/api/payment_platforms', Array.from(payment_platforms));
-            await enviardata('/api/transaction_status', Array.from(transaction_status));
+            await enviardata('/api/payment', Array.from(payment_platforms));
+            await enviardata('/api/status', Array.from(transaction_status));
             // endpoint de transaction
-            await enviardata('/api/transaction', transaction);
+            await enviardata('/api/transaction', transactions);
         } catch (error) {
             error = true;
         }
