@@ -1,7 +1,7 @@
 CREATE TABLE customers(
 	id_customer INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
 	name_customer VARCHAR(50) NOT NULL ,
-    identification  VARCHAR(40) UNIQUE NOT NULL,
+    identification_customer  VARCHAR(40) UNIQUE NOT NULL,
     direction VARCHAR(40) NOT NULL,
     phone VARCHAR(20) UNIQUE NOT NULL,
     email VARCHAR(30) UNIQUE NOT NULL,
@@ -43,12 +43,12 @@ CREATE TABLE payment_platforms (
 
 CREATE TABLE transactions (
 	id_transaction VARCHAR(20) NOT NULL PRIMARY KEY,
-    date_time DATETIME,
-    transaction_amount INT,
-    trasaction_type VARCHAR(20),
     id_invoice INT,
     id_state INT,
     id_payment INT,
+    date_time DATETIME,
+    transaction_amount INT,
+    trasaction_type VARCHAR(20),
 	FOREIGN KEY (id_invoice) REFERENCES invoices(id_invoice) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (id_state ) REFERENCES transaction_status(id_state),
 	FOREIGN KEY (id_payment) REFERENCES payment_platforms(id_payment),

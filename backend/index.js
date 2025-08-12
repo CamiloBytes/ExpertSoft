@@ -10,7 +10,7 @@ import invoicesRoutes from './routes/invoices.js'
 import paymentRoutes from './routes/payment_platforms.js'
 import transationRoutes from './routes/transaction.js'
 import statusRouter from './routes/transation_status.js'
-
+import postmanRouter from './routes/postman.js'
 // Creamos la aplicación de Express (esto es como el servidor en sí)
 const app = express()
 
@@ -28,6 +28,9 @@ app.use('/api/invoices', invoicesRoutes)
 app.use('/api/payment', paymentRoutes)
 app.use('/api/transation', transationRoutes)
 app.use('/api/status',statusRouter)
+
+
+app.use('postman')
 
 // Encendemos el servidor en el puerto 3000. Cuando esté listo, muestra un mensaje en la consola.
 app.listen(3000, () => {
