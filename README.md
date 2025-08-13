@@ -189,10 +189,10 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 
 ## 👥 Contacto
 
-- **Email**: soporte@expertsoft.com
-- **Web**: www.expertsoft.com
-- **Teléfono**: +1 (555) 123-4567
+- **Email**: camiloandres02222@gmail.com
+- **clan**: Ciegana
+- **CC**: 1043136986
 
 ---
 
-**Desarrollado con ❤️ por el equipo de ExpertSoft**
+
