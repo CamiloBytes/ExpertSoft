@@ -73,7 +73,7 @@ ExpertSoft/
 
 ### 1. Clone Repository
 ```bash
-git clone (https://github.com/CamiloBytes/ExpertSoft.git)
+git clone https://github.com/CamiloBytes/ExpertSoft.git
 cd ExpertSoft
 ```
 
