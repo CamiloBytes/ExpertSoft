@@ -1,10 +1,10 @@
-import { endPointPrestamo, endPointUsuarios } from "./endpoint";
+import { endPointCustomer } from "./endpoint";
 import axios from "axios";
 import { router } from "./router";
 import { leerExcel } from "./read_excel";
 import Swal from "sweetalert2";
 
-// Esta función renderiza la vista de inicio
+// This function renders the home view
 export function home() {
     const home = document.getElementById('app')
     home.innerHTML = `
@@ -15,7 +15,6 @@ export function home() {
        <nav>
         <ul>
             <li><button id="btn-home">Inicio</button></li>
-            <li><button id="btn-invoices">facturas</button></li>
             <li><button id="btn-customer">clientes</button></li>        
         </ul>
       </nav>
@@ -31,7 +30,7 @@ export function home() {
     </section>
 `
 
-    // Variable para guardar el archivo seleccionado por el usuario
+    // Variable to save the file selected by the customer
     let archivoSeleccionado = null;
 
     const from = document.getElementById('fromExcel')
@@ -46,60 +45,55 @@ export function home() {
             alert('Por favor selecciona un archivo Excel antes de enviarlo.')
             return
         }
-        // llamo a la funcion leerExcel para procesar el archivo 
+        // call the readExcel function to process the file
         leerExcel(archivoSeleccionado)
     })
 
-    // Selecciono los botones del menú
-    const btnInicio = document.getElementById('btn-home');
-    const btnPrestamos = document.getElementById('btn-invoices');
-    const btnUsuarios = document.getElementById('btn-customer');
-    // escucho los eventos para cambiar de vista
-    btnInicio.addEventListener('click', (e) => {
+    // I select the menu buttons
+    const btnHome = document.getElementById('btn-home');
+    const btnCustomers = document.getElementById('btn-customer');
+
+    btnHome.addEventListener('click', (e) => {
         e.preventDefault();
         history.pushState({}, '', '/');
         router();
     });
-    btnPrestamos.addEventListener('click', (e) => {
+
+    btnCustomers.addEventListener('click', (e) => {
         e.preventDefault();
-        history.pushState({}, '', '/prestamos');
-        router();
-    });
-    btnUsuarios.addEventListener('click', (e) => {
-        e.preventDefault();
-        history.pushState({}, '', '/usuarios');
+        history.pushState({}, '', '/customers');
         router();
     });
 
 }
-// Esta funcion es para renderisar la tabla de los usuarios
+// This function is to render the customer table
 export function renderUsersPage(e) {
-    e?.preventDefault(); // Evitar el comportamiento por defecto del botón si es necesario  
+    e?.preventDefault(); 
     const app = document.getElementById('app');
     app.innerHTML = `
     <section>
       <header class = "header">
-         <h1>Usuarios</h1>
+         <h1>customers</h1>
        <nav>
         <ul>
             <li><button id="btn-inicio">Inicio</button></li>
-            <li><button id="btn-prestamos">Prestamos</button></li> 
             <li><button id="btn-recargar">Recargar</button></li>    
         </ul>
       </nav>
     </header>
          
       <div style="overflow:auto; margin-top:12px;">
-        <table id="tabla-usuarios" border="1" cellpadding="6" cellspacing="0">
+        <table id="tabla-customers" border="1" cellpadding="6" cellspacing="0">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Nombre</th>
-              <th>Identificación</th>
-              <th>Correo</th>
-              <th>Teléfono</th>
-              <th>Creado</th>
-              <th>Actualizado</th>
+              <th>Nombre del Cliente</th>
+              <th>Número de Identificación</th>
+              <th>Dirección</th>
+              <th>Telefono</th>
+              <th>Correo Electronico</th>
+              <th>delete</th>
+              <th>update</th>
             </tr>
           </thead>
           <tbody>
@@ -110,58 +104,52 @@ export function renderUsersPage(e) {
     </section>
   `
     // Selecciono los elementos del DOM
-    const tbody = app.querySelector('#tabla-usuarios tbody')
-    const btnRecargar = app.querySelector('#btn-recargar')
-    const btnInicio = app.querySelector('#btn-inicio');
-    const btnPrestamos = app.querySelector('#btn-prestamos');
+    const tbody = app.querySelector('#tabla-customers tbody')
+    const btnReload = app.querySelector('#btn-recargar')
+    const btnHome = app.querySelector('#btn-inicio');
 
-    btnInicio.addEventListener('click', (e) => {
+    btnHome.addEventListener('click', (e) => {
         e.preventDefault();
         history.pushState({}, '', '/');
         router();
     });
-    btnPrestamos.addEventListener('click', (e) => {
-        e.preventDefault();
-        history.pushState({}, '', '/prestamos');
-        router();
-    });
 
-    async function cargarUsuarios(e) {
-        e?.preventDefault(); // Evitar el comportamiento por defecto del botón si es necesario  
-        // Limpio la tabla y muestro mensaje de carga
+    async function loadcustomers(e) {
+        e?.preventDefault(); 
         tbody.innerHTML = `<tr><td colspan="7">Cargando...</td></tr>`
         try {
-            const { data } = await axios.get(endPointUsuarios);
-            const usuarios = data.usuarios_encontrados
+            const { data } = await axios.get(endPointCustomer);
+            const customers = data.customers_encontrados
 
-            if (!Array.isArray(usuarios) || usuarios.length === 0) {
+            if (!Array.isArray(customers) || customers.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7">Sin datos</td></tr>`
-                console.error("El backend no devolvió un array válido:", usuarios)
+                console.error("El backend no devolvió un array válido:", customers)
                 return
             }
-            tbody.innerHTML = ''; // Limpio tabla
+            tbody.innerHTML = ''; 
 
-            usuarios.forEach(usuario => {
+            customers.forEach(customer => {
                 const fila = document.createElement('tr')
                 fila.innerHTML = `
-                <td>${usuario.id_usuario}</td>
-                <td>${usuario.nombre}</td>
-                <td>${usuario.identificacion}</td>
-                <td>${usuario.correo}</td>
-                <td>${usuario.telefono}</td>
-                <td><button class="btn-eliminar" data-id="${usuario.id_usuario}">Eliminar</button></td>
-                <td><button class="btn-actualizar" data-id="${usuario.id_usuario}">Actualizar</button></td>
+                <td>${customer.id_customer}</td>
+                <td>${customer.name_customer}</td>
+                <td>${customer.identification_customer}</td>
+                <td>${customer.direction}</td>
+                <td>${customer.phone}</td>
+                <td>${customer.email}</td>
+                <td><button class="btn-delete" data-id="${customer.id_customer}">delete</button></td>
+                <td><button class="btn-update" data-id="${customer.id_customer}">update</button></td>
             `
                 tbody.appendChild(fila);
             })
 
-            document.querySelectorAll('.btn-eliminar').forEach(boton => {
+            document.querySelectorAll('.btn-delete').forEach(boton => {
                 boton.addEventListener('click', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     const id = boton.dataset.id;
                     Swal.fire({
-                        title: `¿Seguro que quieres eliminar el usuario #${id}?`,
+                        title: `¿Seguro que quieres eliminar el customer #${id}?`,
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonText: 'Sí, eliminar',
@@ -169,190 +157,39 @@ export function renderUsersPage(e) {
                     }).then(async (result) => {
                         if (result.isConfirmed) {
                             try {
-                                await axios.delete(`${endPointUsuarios}/${id}`);
-                                Swal.fire('Eliminado', `Usuario con ID ${id} eliminado correctamente.`, 'success');
+                                await axios.delete(`${endPointCustomer}/${id}`);
+                                Swal.fire('Eliminado', `customer con ID ${id} eliminado correctamente.`, 'success');
                                 boton.closest('tr').remove();
                             } catch (error) {
-                                Swal.fire('Error', 'No se pudo eliminar el usuario.', 'error');
-                                console.error('Error al eliminar usuario:', error.message);
+                                Swal.fire('Error', 'No se pudo delete el customer.', 'error');
+                                console.error('Error al delete customer:', error.message);
                             }
                         }
                     });
                 });
             });
 
-            // Botones Actualizar
-            document.querySelectorAll('.btn-actualizar').forEach(boton => {
+            //update
+            document.querySelectorAll('.btn-update').forEach(boton => {
                 boton.addEventListener('click', async () => {
                     const id = boton.dataset.id;
                     try {
-                        await axios.put(`${endPointUsuarios}/${id}`, { estado_del_prestamo: "Devuelto" });
+                        await axios.put(`${endPointCustomer}/${id}`, { estado_del_prestamo: "Devuelto" });
                         console.log(`Préstamo con ID ${id} actualizado`);
-                        cargarUsuarios();
+                        loadcustomers();
                     } catch (error) {
                         console.error('Error al actualizar préstamo:', error.message);
                     }
                 });
             });
+            
 
         } catch (e) {
-            console.error('Error cargando usuarios:', e)
+            console.error('Error cargando customers:', e)
             tbody.innerHTML = `<tr><td colspan="7">Error cargando datos</td></tr>`
         }
     }
 
-    btnRecargar.addEventListener('click', cargarUsuarios)
-    cargarUsuarios()
-}
-
-export function renderPrestamos(e) {
-    e?.preventDefault(); // Evitar el comportamiento por defecto del botón si es necesario  
-    // Renderizo la vista de préstamos
-    const app = document.getElementById('app');
-    app.innerHTML = `
-    <section>
-     <header class = "header">
-         <h1>Usuarios</h1>
-       <nav>
-        <ul>
-            <li><button id="btn-inicio">Inicio</button></li>
-            <li><button id="btn-usuarios">Usuarios</button></li> 
-            <li><button id="btn-recargar">Recargar</button></li>    
-        </ul>
-      </nav>
-    </header>
-      <div style="overflow:auto; margin-top:12px;">
-       <table id="tabla-prestamos" border="1" cellpadding="6" cellspacing="0">
-    <thead>
-        <tr>
-        <th>ID Préstamo</th>
-        <th>Nombre Usuario</th>
-        <th>Identificación</th>
-        <th>Correo</th>
-        <th>Teléfono</th>
-        <th>Título Libro</th>
-        <th>ISBN</th>
-        <th>Año Publicación</th>
-        <th>Autor</th>
-        <th>Fecha Préstamo</th>
-        <th>Fecha Devolución</th>
-        <th>Estado Préstamo</th>
-        <th>Creado</th>
-        <th>Actualizado</th>
-        
-        </tr>
-    </thead>
-  <tbody>
-    <tr><td colspan="15">Cargando...</td></tr>
-  </tbody>
-</table>
-      </div>
-    </section>
-  `
-
-    const tbody = app.querySelector('#tabla-prestamos tbody');
-    const btnRecargar = app.querySelector('#btn-recargar');
-    const btnInicio = app.querySelector('#btn-inicio');
-    const btnUsuario = app.querySelector('#btn-usuarios');
-    btnInicio.addEventListener('click', (e) => {
-        e.preventDefault();
-        history.pushState({}, '', '/');
-        router();
-    });
-    btnUsuario.addEventListener('click', (e) => {
-        e.preventDefault();
-        history.pushState({}, '', '/usuarios');
-        router();
-    });
-
-    async function cargarPrestamos(e) {
-        e?.preventDefault(); // Evitar el comportamiento por defecto del botón si es necesario  
-        tbody.innerHTML = `<tr><td colspan="15">Cargando...</td></tr>`;
-        try {
-
-            const { data } = await axios.get(endPointPrestamo);
-
-            const prestamos = data.prestamos_encontrados;
-
-            if (!Array.isArray(prestamos) || prestamos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="15">Sin datos</td></tr>`;
-                console.error("El backend no devolvió un array válido:", prestamos);
-                return;
-            }
-
-            console.log(prestamos); // Verificación en consola
-
-            tbody.innerHTML = ''; // Limpio tabla
-
-            prestamos.forEach(prestamo => {
-                const fila = document.createElement('tr');
-
-                fila.innerHTML = `
-                <td>${prestamo.id_del_prestamo}</td>
-                <td>${prestamo.nombre_completo_usuario}</td>
-                <td>${prestamo.documento_identificacion}</td>
-                <td>${prestamo.email_usuario}</td>
-                <td>${prestamo.telefono_contacto}</td>
-                <td>${prestamo.titulo_del_libro}</td>
-                <td>${prestamo.codigo_isbn}</td>
-                <td>${prestamo.año_de_publicacion}</td>
-                <td>${prestamo.autor_del_libro}</td>
-                <td>${prestamo.fecha_de_prestamo}</td>
-                <td>${prestamo.fecha_de_devolucion}</td>
-                <td>${prestamo.estado_del_prestamo}</td>
-                <td><button class="btn-eliminar" data-id="${prestamo.id_del_prestamo}">Eliminar</button></td>
-                <td><button class="btn-actualizar" data-id="${prestamo.id_del_prestamo}">Actualizar</button></td>
-            `;
-
-                tbody.appendChild(fila);
-            });
-
-            // Botones Eliminar
-            document.querySelectorAll('.btn-eliminar').forEach(boton => {
-                boton.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const id = boton.dataset.id;
-                    Swal.fire({
-                        title: `¿Seguro que quieres eliminar el usuario #${id}?`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, eliminar',
-                        cancelButtonText: 'Cancelar'
-                    }).then(async (result) => {
-                        if (result.isConfirmed) {
-                            try {
-                                await axios.delete(`${endPointPrestamo}/${id}`);
-                                Swal.fire('Eliminado', `Usuario con ID ${id} eliminado correctamente.`, 'success');
-                                boton.closest('tr').remove();
-                            } catch (error) {
-                                Swal.fire('Error', 'No se pudo eliminar el usuario.', 'error');
-                                console.error('Error al eliminar usuario:', error.message);
-                            }
-                        }
-                    });
-                });
-            });
-
-            // Botones Actualizar
-            document.querySelectorAll('.btn-actualizar').forEach(boton => {
-                boton.addEventListener('click', async () => {
-                    const id = boton.dataset.id;
-                    try {
-                        await axios.put(`${endPointPrestamo}/${id}`, { estado_del_prestamo: "Devuelto" });
-                        console.log(`Préstamo con ID ${id} actualizado`);
-                        cargarPrestamos();
-                    } catch (error) {
-                        console.error('Error al actualizar préstamo:', error.message);
-                    }
-                });
-            });
-
-        } catch (error) {
-            console.error('Error al obtener préstamos:', error.message);
-        }
-    }
-    btnRecargar.addEventListener('click', cargarPrestamos)
-    cargarPrestamos()
-
+    btnReload.addEventListener('click', loadcustomers)
+    loadcustomers()
 }

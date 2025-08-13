@@ -1,7 +1,49 @@
-// Importamos la librería xlsx para poder leer archives Excel
+// We import the xlsx library to be able to read Excel files
 import * as XLSX from 'xlsx';
 import axios from 'axios';
 import { alertaExcelError, alertaExcelExito } from './alert';
+
+// Function to normalize dates from Excel
+function handleExcelDate(value) {
+    if (!value) return null;
+
+    try {
+        let date;
+
+        // Handle Excel serial numbers
+        if (typeof value === 'number') {
+            date = new Date((value - 25569) * 86400 * 1000);
+        } 
+        // Handle date strings
+        else if (typeof value === 'string') {
+            const cleanValue = value.trim();
+            if (!cleanValue) return null;
+
+            // Detect DD/MM/YYYY or DD-MM-YYYY format
+            const dateRegex = /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/;
+            const match = cleanValue.match(dateRegex);
+            
+            if (match) {
+                const [, day, month, year] = match;
+                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            } else {
+                date = new Date(cleanValue);
+            }
+        } 
+        // Handle Date objects
+        else if (value instanceof Date) {
+            date = value;
+        } else {
+            return null;
+        }
+
+        // Formatear a ISO string
+        return date.toISOString().slice(0, 19).replace('T', ' ');
+    } catch (error) {
+        console.error('Error normalizando fecha:', error);
+        return null;
+    }
+}
 
 
 
@@ -52,12 +94,15 @@ export function leerExcel(archive) {
 
             transaction_status.add(row["Estado de la Transacción"])
 
+            // Normalizar fechas desde Excel
+            const normalizedDateTime = handleExcelDate(row["Fecha y Hora de la Transacción"]);
+            
             // agrego los data al arreiglo de los transaction
             transactions.push({
-                date_time:row["Fecha y Hora de la Transacción"],
-                transaction_amount:row["Monto de la Transacción"],
-                trasaction_type:row["Tipo de Transacción"],
-                identification_customer : row["Número de Identificación"],
+                date_time: normalizedDateTime,
+                transaction_amount: row["Monto de la Transacción"],
+                trasaction_type: row["Tipo de Transacción"],
+                identification_customer: row["Número de Identificación"],
                 invoice_number: row["Número de Factura"],
                 name_state: row["Estado de la Transacción"],
                 name_payment: row["Plataforma Utilizada"]
@@ -67,7 +112,9 @@ export function leerExcel(archive) {
         try {
             // Enviamos los data a los endpoints del backend
             // endpoint de customer
+
             await enviardata('/api/customer', customers);
+            
             // endpoint de invoices
             await enviardata('/api/invoices', invoices);
             // endpoint de payment_platforms, convertimos el Set a un Array

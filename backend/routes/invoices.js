@@ -1,27 +1,12 @@
 // Importamos el router de express y la conexión a la base de datos
 import { Router } from 'express'
 import db from '../db.js'
-import { format, isValid } from 'date-fns'
+
 
 const router = Router()
 
-// Utilidades para normalizar fechas provenientes de Excel o strings
-
-
-// Reemplazo simple de tu función actual
-export function normalizeDateInput(input) {
-    if (input == null || input === '') return null
-
-    try {
-        const date = typeof input === 'number'
-            ? new Date((input - 25569) * 86400 * 1000) // Excel serial
-            : new Date(input) // String o Date object
-
-        return isValid(date) ? format(date, 'yyyy-MM-dd') : null
-    } catch {
-        return null
-    }
-}
+// Importar la utilidad de normalización de fechas
+import { normalizeDateTime } from '../utils/dateNormalizer.js';
 
 router.post('/', async (req, res) => {
     try {
@@ -39,7 +24,7 @@ router.post('/', async (req, res) => {
             } = invoice || {}
 
             // Validación básica: campos obligatorios
-            if (!invoice_number|| !bulling_period|| !identification_customer || !invoiced_amount || !amount_pay ) {
+            if (!invoice_number || !bulling_period || !identification_customer || !invoiced_amount || !amount_pay) {
                 console.error(`Fila ${indice}: Faltan campos requeridos`)
                 continue
             }
@@ -50,25 +35,24 @@ router.post('/', async (req, res) => {
                 [identification_customer]
             )
             if (customer.length === 0) {
-                console.error(`Fila ${indice}: customer no encontrado (${date_time})`)
+                console.error(`Fila ${indice}: customer no encontrado (${identification_customer})`)
                 continue
             }
 
-            // Comprobar si ya existe ese invoice (mismo customer, número de invoice y fecha)
+            // Comprobar si ya existe ese invoice (mismo customer y número de invoice)
             const [existingInvoice] = await db.promise().query(
                 `SELECT id_invoice 
                 FROM invoices 
                 WHERE id_customer = ? 
-                AND invoice_number = ? 
-                AND date_time = ?`,
-                [customer[0].id_customer, invoice_number, bulling_period]
+                AND invoice_number = ?`,
+                [customer[0].id_customer, invoice_number]
             )
 
             if (existingInvoice.length === 0) {
                 // Si NO existe → lo insertamos
                 await db.promise().query(
                     `INSERT INTO invoices (
-                    id_customer, invoice_number, date_time, invoiced_amount, amount_pay
+                    id_customer, invoice_number, bulling_period, invoiced_amount, amount_pay
                     ) VALUES (?, ?, ?, ?, ?)`,
                     [
                         customer[0].id_customer,

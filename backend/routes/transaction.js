@@ -1,34 +1,16 @@
-// Importamos el router de express y la conexión a la base de datos
+// We import the express router and the connection to the database
 import { Router } from 'express'
 import db from '../db.js'
-import { format, isValid } from 'date-fns'
+import { normalizeDateTime } from '../utils/dateNormalizer.js'
 
 const router = Router()
-
-// Utilidades para normalizar fechas provenientes de Excel o strings
-
-
-// Reemplazo simple de tu función actual
-export function normalizeDateInput(input) {
-    if (input == null || input === '') return null
-
-    try {
-        const date = typeof input === 'number'
-            ? new Date((input - 25569) * 86400 * 1000) // Excel serial
-            : new Date(input) // String o Date object
-
-        return isValid(date) ? format(date, 'yyyy-MM-dd') : null
-    } catch {
-        return null
-    }
-}
 
 router.post('/', async (req, res) => {
     try {
         const transactions = Array.isArray(req.body) ? req.body : [req.body]
 
-        let insertados = 0 // Contador de préstamos que sí se insertan
-
+        let insertados = 0 
+        let errores = [] 
         for (const [indice, transaction] of transactions.entries()) {
             const {
                 date_time,
@@ -40,98 +22,130 @@ router.post('/', async (req, res) => {
                 name_payment
             } = transaction || {}
 
-            // Validación básica: campos obligatorios
-            if (!identification_customer|| !invoice_number|| !name_state || !name_payment) {
-                console.error(`Fila ${indice}: Faltan campos requeridos`)
+           
+            if (!identification_customer || !invoice_number || !name_state || !name_payment) {
+                const errorMsg = `Fila ${indice}: Faltan campos requeridos - identification_customer: ${identification_customer}, invoice_number: ${invoice_number}, name_state: ${name_state}, name_payment: ${name_payment}`;
+                console.error(errorMsg)
+                errores.push(errorMsg)
                 continue
             }
 
-            // Buscar ID del customer
-            const [customer] = await db.promise().query(
-                'SELECT id_customer FROM customers WHERE identification_customer = ?',
-                [identification_customer]
-            )
-            if (customer.length === 0) {
-                console.error(`Fila ${indice}: customer no encontrado (${date_time})`)
+            
+            const amount = parseFloat(transaction_amount)
+            if (isNaN(amount)) {
+                const errorMsg = `Fila ${indice}: transaction_amount no es un número válido: ${transaction_amount}`;
+                console.error(errorMsg)
+                errores.push(errorMsg)
                 continue
             }
 
-            // Buscar ID del invoice
-            const [invoice] = await db.promise().query(
-                'SELECT id_invoice FROM invoices WHERE invoice_number = ?',
-                [invoice_number]
-            )
-            if (invoice.length === 0) {
-                console.error(`Fila ${indice}: invoice no encontrado (${transaction_amount})`)
-                continue
-            }
-
-            // Buscar ID del estado
-            const [status ] = await db.promise().query(
-                'SELECT id_states FROM transaction_status WHERE name_state = ?',
-                [name_state]
-            )
-            if (status.length === 0) {
-                console.error(`Fila ${indice}: Estado no encontrado (${trasaction_type})`)
-                continue
-            }
-
-            const [payment ] = await db.promise().query(
-                'SELECT id_payment FROM payment_platforms WHERE name_payment = ?',
-                [name_payment]
-            )
-            if (payment.length === 0) {
-                console.error(`Fila ${indice}: Estado no encontrado (${trasaction_type})`)
-                continue
-            }
-
-            // Normalizamos las fechas
-            const fechatransactionISO = normalizeDateInput(date_time)
-
-            // Comprobar si ya existe ese préstamo (mismo customer, invoice y fecha)
-            const [transactionExistente] = await db.promise().query(
-                `SELECT id_transaction 
-                FROM transactions 
-                WHERE id_customer = ? 
-                AND id_invoice = ? 
-                AND identification_customer = ?`,
-                [customer[0].id_customer, invoice[0].id_invoice, fechatransactionISO]
-            )
-
-            if (transactionExistente.length === 0) {
-                // Si NO existe → lo insertamos
-                await db.promise().query(
-                    `INSERT INTO transactions (
-                    id_invoice, id_states, id_payment, date_time,transaction_amount,trasaction_type 
-                    ) VALUES (?, ?, ?, ?, ?,?)`,
-                    [
-                        customer[0].id_customer,
-                        invoice[0].id_invoice,
-                        status[0].id_estado,
-                        fechatransactionISO,
-                        transaction_amount,
-                        trasaction_type 
-                    ]
+            try {
+               
+                const [customer] = await db.promise().query(
+                    'SELECT id_customer FROM customers WHERE identification_customer = ?',
+                    [identification_customer]
                 )
-                insertados++
-            } else {
-                // Si ya existe → solo mostramos el error en consola y no insertamos
-                console.error(`Fila ${indice}: Préstamo duplicado → customer ${date_time}, invoice ${transaction_amount}, Fecha ${fechatransactionISO}`)
+                if (customer.length === 0) {
+                    const errorMsg = `Fila ${indice}: customer no encontrado con identification_customer: ${identification_customer}`;
+                    console.error(errorMsg)
+                    errores.push(errorMsg)
+                    continue
+                }
+
+                
+                const [invoice] = await db.promise().query(
+                    'SELECT id_invoice FROM invoices WHERE invoice_number = ?',
+                    [invoice_number]
+                )
+                if (invoice.length === 0) {
+                    const errorMsg = `Fila ${indice}: invoice no encontrado con invoice_number: ${invoice_number}`;
+                    console.error(errorMsg)
+                    errores.push(errorMsg)
+                    continue
+                }
+
+               
+                const [status] = await db.promise().query(
+                    'SELECT id_state FROM transaction_status WHERE name_state = ?',
+                    [name_state]
+                )
+                if (status.length === 0) {
+                    const errorMsg = `Fila ${indice}: Estado no encontrado con name_state: ${name_state}`;
+                    console.error(errorMsg)
+                    errores.push(errorMsg)
+                    continue
+                }
+
+               
+                const [payment] = await db.promise().query(
+                    'SELECT id_payment FROM payment_platforms WHERE name_payment = ?',
+                    [name_payment]
+                )
+                if (payment.length === 0) {
+                    const errorMsg = `Fila ${indice}: Payment platform no encontrado con name_payment: ${name_payment}`;
+                    console.error(errorMsg)
+                    errores.push(errorMsg)
+                    continue
+                }
+
+               
+                const fechatransactionISO = normalizeDateTime(date_time)
+
+             
+                const [transactionExistente] = await db.promise().query(
+                    `SELECT id_transaction 
+                    FROM transactions 
+                    WHERE id_invoice = ? 
+                    AND date_time = ?`,
+                    [invoice[0].id_invoice, fechatransactionISO]
+                )
+
+                if (transactionExistente.length === 0) {
+      
+                    await db.promise().query(
+                        `INSERT INTO transactions (
+                        id_invoice, id_state, id_payment, date_time, transaction_amount, trasaction_type 
+                        ) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [
+                            invoice[0].id_invoice,
+                            status[0].id_state,
+                            payment[0].id_payment,
+                            fechatransactionISO,
+                            amount,
+                            trasaction_type 
+                        ]
+                    )
+                    insertados++
+                } else {
+                    const errorMsg = `Fila ${indice}: Transacción duplicada - invoice: ${invoice_number}, fecha: ${fechatransactionISO}`;
+                    console.error(errorMsg)
+                    errores.push(errorMsg)
+                }
+            } catch (dbError) {
+                const errorMsg = `Fila ${indice}: Error en base de datos - ${dbError.message}`;
+                console.error(errorMsg)
+                errores.push(errorMsg)
             }
         }
 
         return res.status(201).json({
             mensaje: 'Proceso completado',
-            insertados
+            insertados,
+            total_filas: transactions.length,
+            errores: errores.length > 0 ? errores : null
         })
 
     } catch (error) {
-        console.error('Error al insertar el préstamo:', error)
-        res.status(500).json({ error: 'Error interno del servidor' })
+        console.error('Error al procesar transacciones:', error)
+        res.status(500).json({ 
+            error: 'Error interno del servidor',
+            detalle: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        })
     }
 })
 
-// creo el enpoid para traer los datos de al frontend
+
 router.get('/', async (req, res) => {
     try {
         const [transactions] = await db.promise().query(`
@@ -172,10 +186,10 @@ router.get('/', async (req, res) => {
     }
 });
 
-// creo el endpoint de elliminar un dato de la tabla transaction
+
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
-    // verifico si me esta enviando el id para enviarlo
+
     if (!id) return res.status(400).json({ error: 'ID requerido' });
 
     try {
@@ -184,7 +198,6 @@ router.delete('/:id', async (req, res) => {
             [id]
         );
 
-        // Reiniciar el contador AUTO_INCREMENT si la tabla está vacía
         const [rows] = await db.promise().query('SELECT COUNT(*) AS total FROM transactions');
         if (rows[0].total === 0) {
             await db.promise().query('ALTER TABLE transactions AUTO_INCREMENT = 1');
@@ -203,14 +216,14 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    // verifico si me esta enviando el id para enviarlo
+
     if (!id) return res.status(400).json({ error: 'ID requerido' });
 
     try {
         const [result] = await db.promise().query(
             `UPDATE transactions 
-       SET id_estado = ?, invoice_number = ? 
-       WHERE id_transaction = ?`
+        SET id_estado = ?, invoice_number = ? 
+        WHERE id_transaction = ?`
             [id]
         );
 

@@ -1,11 +1,10 @@
-import { home, renderPrestamos, renderUsersPage } from "./views.js";
+import { home, renderUsersPage } from "./views.js";
 
 
 
 const routes = {
     "/": home,
-    "/prestamos": renderPrestamos,
-    "/usuarios": renderUsersPage    
+    "/customers": renderUsersPage    
 };
 
 export function router() {
@@ -15,8 +14,7 @@ export function router() {
         path = '/';
     }
     // Si tienes rutas dinámicas, puedes manejarlas aquí
-    // Ejemplo: /dashboard/events/edit/:id
-    if (path.startsWith("/dashboard/events/edit/")) {
+    if (path.startsWith("/dashboard")) {
         const eventId = path.split("/").pop();
         showEditevent(eventId);
         return;

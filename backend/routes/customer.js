@@ -15,22 +15,21 @@ router.post('/', async (req, res) => {
         for (const customer of customers) {
             // Revisamos si ya exists un usuario con esa identificación o correo
             const [exists] = await db.promise().query(
-                'SELECT * FROM customer WHERE identification = ? OR email = ? OR phone = ?',
-                [customer.identification, customer.email, customer.phone]
+                'SELECT * FROM customers WHERE identification_customer = ?  ',
+                [customer.identification_customer]
             )
 
             if (exists.length === 0) {
                 // Si no exists, lo insertamos
                 await db.promise().query(
-                    'INSERT INTO customers (name_customer, identification, direction, phone, email) VALUES (?, ?, ?, ?, ?)',
-                    [customer.nombre, customer.identificacion, customer.correo, customer.telefono]
+                    'INSERT INTO customers (name_customer, identification_customer, direction, phone, email) VALUES (?, ?, ?, ?, ?)',
+                    [customer.name_customer, customer.identification_customer, customer.direction, customer.phone, customer.email]
                 )
             } else {
                 //  Si ya exists, lo ignoramos (evitamos duplicados)
                 console.log(`Usuario duplicado: ${u.identificacion}`)
             }
         }
-
         res.status(200).json({ message: 'customers insertados correctamente' })
     } catch (error) {
         console.error(' Error insertando customers:', error.message)
@@ -38,11 +37,11 @@ router.post('/', async (req, res) => {
     }
 })
 
-// Nueva ruta GET: lista todos los customers
+// New GET route: list all customers
 router.get('/', async (req, res) => {
     try {
         const [customers] = await db.promise().query(
-            'SELECT id_customer, name_customer, identification, direction, phone, email FROM customers ORDER BY id_customer ASC'
+            'SELECT id_customer, name_customer, identification_customer, direction, phone, email FROM customers ORDER BY id_customer ASC'
         )
         res.status(200).json({
             mensaje: 'Lista de customers obtenida exitosamente',
@@ -55,10 +54,10 @@ router.get('/', async (req, res) => {
     }
 })
 
-// creo el endpoint de elliminar un dato de la tabla prestamo
+// I create the endpoint to delete data from the loan table
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
-    // verifico si me esta enviando el id para enviarlo
+    // I check if it is sending me the id to send it
     if (!id) return res.status(400).json({ error: 'ID requerido' });
 
     try {
@@ -67,7 +66,7 @@ router.delete('/:id', async (req, res) => {
             [id]
         );
 
-        // Reiniciar el contador AUTO_INCREMENT si la tabla está vacía
+        // Reset the AUTO_INCREMENT counter if the table is empty
         const [rows] = await db.promise().query('SELECT COUNT(*) AS total FROM customers');
         if (rows[0].total === 0) {
             await db.promise().query('ALTER TABLE customers AUTO_INCREMENT = 1');
@@ -85,5 +84,5 @@ router.delete('/:id', async (req, res) => {
 });
 
 
-// Exportamos el router para usarlo en el index.js
+// We export the router to use it in index.js
 export default router

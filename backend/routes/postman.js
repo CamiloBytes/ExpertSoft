@@ -1,13 +1,13 @@
-// Importamos express para crear la ruta
+// We import express to create the route
 import express from 'express'
 
-// Importamos la conexión a la base de datos
+// We import the connection to the database
 import db from '../db.js'
+// We create a router with Express
 
-// Creamos un enrutador con Express
 const router = express.Router()
 
-// 1. Total pagado por cada cliente
+//Total paid by each client
 router.get('/total-paid-by-customer', async (req, res) => {
     try {
         const [results] = await db.promise().query(`
@@ -41,8 +41,7 @@ router.get('/total-paid-by-customer', async (req, res) => {
         })
     }
 })
-
-// 2. Facturas pendientes con información de cliente y transacción asociada
+// Pending invoices with customer information and associated transaction
 router.get('/pending-invoices', async (req, res) => {
     try {
         const [results] = await db.promise().query(`
@@ -87,7 +86,7 @@ router.get('/pending-invoices', async (req, res) => {
     }
 })
 
-// 3. Listado de transacciones por plataforma
+// List of transactions by platform
 router.get('/transactions-by-platform/:platform', async (req, res) => {
     const { platform } = req.params
     
@@ -134,33 +133,5 @@ router.get('/transactions-by-platform/:platform', async (req, res) => {
     }
 })
 
-// Endpoint adicional: Listar todas las plataformas disponibles
-router.get('/platforms', async (req, res) => {
-    try {
-        const [results] = await db.promise().query(`
-            SELECT id_payment, name_payment 
-            FROM payment_platforms 
-            ORDER BY name_payment ASC
-        `)
-        
-        res.status(200).json({
-            success: true,
-            message: 'Plataformas de pago obtenidas exitosamente',
-            total_platforms: results.length,
-            data: results
-        })
-    } catch (error) {
-        console.error('Error al obtener plataformas:', error)
-        res.status(500).json({
-            success: false,
-            error: 'Error al obtener plataformas',
-            details: error.message
-        })
-    }
-})
 
-// Endpoint raíz con documentación
-
-
-// Exportamos el router para usarlo en el index.js
 export default router
