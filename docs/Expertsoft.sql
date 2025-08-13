@@ -1,3 +1,5 @@
+CREATE DATABASE CREATE DATABASE pd_camilo_parra_ciegana;
+
 CREATE TABLE customers(
 	id_customer INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
 	name_customer VARCHAR(70) NOT NULL ,

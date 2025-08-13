@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2';
-// Función para mostrar alerta de éxito 
+
 export function alertaExcelExito(tabla) {
     Swal.fire({
         title: 'Datos enviados',
@@ -9,7 +9,6 @@ export function alertaExcelExito(tabla) {
     });
 }
 
-// Función para mostrar la alerta de error 
 export function alertaExcelError(tabla) {
     Swal.fire({
         title: 'Error',
