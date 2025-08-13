@@ -189,9 +189,9 @@ This project is under MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 👥 Contact
 
-- **Email**: support@expertsoft.com
-- **Web**: www.expertsoft.com
-- **Phone**: +1 (555) 123-4567
+- **Email**: camiloandres02222@gmail.com
+- **clan**: ciegana
+- **ID**: 1043136986
 
 ---
 
